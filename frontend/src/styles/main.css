@@ -1,0 +1,12 @@
+:root{ --bg:#f6f7fb; --card:#ffffff; --ink:#0f172a; --muted:#6b7280; }
+*{ box-sizing:border-box; }
+html,body,#app{ height:100%; }
+body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif; background:var(--bg); color:var(--ink); }
+.container{ max-width:1200px; margin:0 auto; padding:16px; }
+.grid{ display:grid; grid-template-columns: 260px 1fr; gap:16px; }
+.panel{ background:var(--card); border-radius:12px; padding:14px; box-shadow: 0 6px 16px rgba(0,0,0,.06); }
+.products-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
+.title{ text-align:center; margin: 14px 0 18px; }
+input,button,select{ font: inherit; }
+label{ font-size:12px; color:var(--muted); }
+button{ cursor:pointer; }
