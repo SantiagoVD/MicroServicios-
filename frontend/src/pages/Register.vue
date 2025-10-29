@@ -50,7 +50,10 @@ function goLogin(){ router.push('/login') }
 </script>
 
 <style scoped>
-.login-bg { height: 100vh; background: url('/src/assets/img/fondo-login.jpg') no-repeat center center / cover; }
+.login-bg { height: 100vh; background: url('/src/assets/img/ImagenLoginRegistro.png') no-repeat center center / cover; }
 .ghost { background:transparent; border:1px solid #334155; color:#0f172a; padding:8px 10px; border-radius:8px; }
+@media (max-width: 640px){
+  .panel { width: min(420px, 92vw) !important; padding:12px !important; }
+}
 </style>
 

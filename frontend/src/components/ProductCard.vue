@@ -28,3 +28,4 @@ function onError(e) {
 .price { font-weight:700; color:#111827; }
 .more { background:#2563eb; color:#fff; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
 </style>
+

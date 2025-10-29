@@ -1,0 +1,11 @@
+# Ignorar node_modules de todos los microservicios
+**/node_modules/
+
+# Ignorar archivos de entorno de todos los microservicios
+**/.env
+
+# Ignorar logs
+**/*.log
+
+# Ignorar build del frontend
+frontend/build/

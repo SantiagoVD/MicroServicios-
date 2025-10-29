@@ -45,5 +45,8 @@ function goRegister(){ router.push('/register') }
 </script>
 
 <style scoped>
-.login-bg { height: 100vh; background: url('/src/assets/img/fondo-login.jpg') no-repeat center center / cover; }
+.login-bg { height: 100vh; background: url('/src/assets/img/ImagenLoginRegistro.png') no-repeat center center / cover; }
+@media (max-width: 640px){
+  .panel { width: min(420px, 92vw) !important; padding:12px !important; }
+}
 </style>

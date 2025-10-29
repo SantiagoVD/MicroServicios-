@@ -2,20 +2,31 @@
   <aside class="drawer" :class="{ open }">
     <div class="head">
       <h3>Tu carrito</h3>
-      <button class="close" @click="$emit('close')">✕</button>
+      <button class="close" @click="$emit('close')">×</button>
     </div>
     <div class="body">
       <p v-if="loading" class="muted">Cargando...</p>
-      <p v-else-if="items.length===0" class="muted">Sin items</p>
+      <p v-else-if="visibleItems.length===0" class="muted">No hay productos seleccionados</p>
       <ul v-else class="list">
-        <li v-for="it in items" :key="it.item_id" class="row">
+        <li v-for="it in visibleItems" :key="it.item_id" class="row">
           <div class="info">
-            <div class="name">Producto #{{ it.producto_id }}</div>
-            <div class="sub">Cantidad: {{ it.cantidad }}</div>
+            <div class="name">{{ productName(pid(it)) || (pid(it) ? ('Producto #' + pid(it)) : 'Producto') }}</div>
+            <div class="sub">x{{ it.cantidad }} • ${{ priceOf(pid(it)) }}</div>
           </div>
           <button class="remove" @click="remove(it.item_id)">Eliminar</button>
         </li>
       </ul>
+    </div>
+    <div class="foot" v-if="visibleItems.length > 0">
+      <div class="totals">
+        <span>Total</span>
+        <strong>$ {{ total.toFixed(2) }}</strong>
+      </div>
+      <div class="foot-actions" v-if="items.length > 0">
+        <button class="clear" :disabled="loading" @click="clearAll">Vaciar carrito</button>
+        <button class="pay" @click="payWhatsapp">Pagar por WhatsApp</button>
+      </div>
+      <p class="limit-note">Máximo 10 productos por carrito.</p>
     </div>
   </aside>
 </template>
@@ -24,17 +35,60 @@
 import { computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
+import { useProductsStore } from '../stores/products'
 
 defineProps({ open: Boolean })
 
 const auth = useAuthStore()
 const cart = useCartStore()
+const products = useProductsStore()
 const items = computed(() => cart.items)
 const loading = computed(() => cart.loading)
+const visibleItems = computed(() => items.value.filter(it => !!(it && (it.producto_id ?? it.product_id ?? it.productoId ?? it.productId) && Number(it.cantidad) > 0)))
 
 async function remove(itemId) {
   const userId = auth.user?.id
   await cart.remove(itemId, userId)
+}
+
+// Ensure products are available for names/prices in the drawer
+if (!products.items?.length) {
+  try { products.fetch && products.fetch() } catch {}
+}
+
+function pid(item){
+  return item?.producto_id ?? item?.product_id ?? item?.productoId ?? item?.productId ?? null
+}
+
+function priceOf(productId){
+  const p = products.items.find(x => String(x.id) === String(productId))
+  const n = Number(String(p?.precio ?? '').toString().replace(/[^0-9.]/g,''))
+  return isNaN(n) ? 0 : n
+}
+
+function productName(productId){
+  return products.items.find(x => String(x.id) === String(productId))?.nombre || ''
+}
+
+const total = computed(() => visibleItems.value.reduce((sum, it) => sum + priceOf(pid(it)) * (Number(it.cantidad)||0), 0))
+
+function payWhatsapp(){
+  const lines = items.value.map(it => {
+    const id = pid(it)
+    const name = productName(id) || `Producto #${id}`
+    const qty = Number(it.cantidad)||0
+    const price = priceOf(id)
+    const sub = (qty * price).toFixed(2)
+    return `• ${name} x${qty} - $${sub}`
+  })
+  const message = `Hola, quiero pagar mi pedido:\n\n${lines.join('\n')}\n\nTotal: $${total.value.toFixed(2)}`
+  const url = `https://wa.me/?text=${encodeURIComponent(message)}`
+  window.open(url,'_blank')
+}
+
+async function clearAll(){
+  const userId = auth.user?.id
+  await cart.clear(userId)
 }
 </script>
 
@@ -50,5 +104,16 @@ async function remove(itemId) {
 .sub { color:#6b7280; font-size:12px; }
 .remove { border:none; background:#ef4444; color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; }
 .close { border:none; background:transparent; font-size:18px; cursor:pointer; }
-</style>
+.foot { border-top:1px solid #e5e7eb; padding:12px; display:grid; gap:8px; background:#fff; }
+.totals { display:flex; align-items:center; justify-content:space-between; }
+.foot-actions { display:flex; gap:8px; }
+.pay { background:#22c55e; color:#fff; border:none; padding:10px 12px; border-radius:10px; cursor:pointer; }
+.pay:disabled { opacity:.6; cursor:not-allowed; }
+.clear { background:transparent; border:1px solid #e5e7eb; color:#334155; padding:10px 12px; border-radius:10px; cursor:pointer; }
+.limit-note { color:#6b7280; font-size:12px; margin: 0; text-align:center; }
 
+@media (max-width: 540px){
+  .drawer { right: -100vw; width: 100vw; }
+  .drawer.open { right: 0; }
+}
+</style>
