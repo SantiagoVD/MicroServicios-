@@ -6,6 +6,7 @@
 
 # Ignorar logs
 **/*.log
+npm-debug.log
 
 # Ignorar build del frontend
 frontend/build/
