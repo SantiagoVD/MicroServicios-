@@ -1,6 +1,6 @@
 import { http } from './http'
 
-const BASE = 'http://localhost:3002/api/products'
+const BASE = import.meta?.env?.VITE_PRODUCTS_API || 'http://3.150.168.237:3002/api/products'
 
 export async function listProducts() {
   const { data } = await http.get(BASE)

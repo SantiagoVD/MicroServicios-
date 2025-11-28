@@ -1,5 +1,7 @@
 import axios from "axios";
-const API = "http://localhost:3003/api/cart";
+
+// Base endpoint for cart operations
+const API = import.meta?.env?.VITE_CART_API || "http://3.150.168.237:13003/api/cart";
 
 export const addToCart = (item) => axios.post(`${API}/add`, item);
 export const getCart = (userId) => axios.get(`${API}/${userId}`);

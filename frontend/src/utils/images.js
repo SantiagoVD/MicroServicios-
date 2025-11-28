@@ -1,7 +1,7 @@
 // Utility to resolve product images from assets/img using Vite's import.meta.glob
 // It maps filenames to URLs and provides a robust lookup by normalized name.
 
-const images = import.meta.glob('../assets/img/*', { eager: true, as: 'url' })
+const images = import.meta.glob('../assets/img/*', { eager: true, query: '?url', import: 'default' })
 
 function normalizeName(value) {
   if (!value) return ''

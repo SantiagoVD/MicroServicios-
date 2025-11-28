@@ -24,7 +24,10 @@
       </div>
       <div class="foot-actions" v-if="items.length > 0">
         <button class="clear" :disabled="loading" @click="clearAll">Vaciar carrito</button>
-        <button class="pay" @click="payWhatsapp">Pagar por WhatsApp</button>
+        <button class="pay primary" :disabled="processing || loading" @click="payOrder">
+          {{ processing ? 'Procesando...' : 'Pagar' }}
+        </button>
+        <button class="pay secondary" @click="payWhatsapp">Pagar por WhatsApp</button>
       </div>
       <p class="limit-note">Máximo 10 productos por carrito.</p>
     </div>
@@ -32,16 +35,18 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
 import { useProductsStore } from '../stores/products'
+import { createOrder } from '../services/orders'
 
 defineProps({ open: Boolean })
 
 const auth = useAuthStore()
 const cart = useCartStore()
 const products = useProductsStore()
+const processing = ref(false)
 const items = computed(() => cart.items)
 const loading = computed(() => cart.loading)
 const visibleItems = computed(() => items.value.filter(it => !!(it && (it.producto_id ?? it.product_id ?? it.productoId ?? it.productId) && Number(it.cantidad) > 0)))
@@ -71,6 +76,35 @@ function productName(productId){
 }
 
 const total = computed(() => visibleItems.value.reduce((sum, it) => sum + priceOf(pid(it)) * (Number(it.cantidad)||0), 0))
+
+async function payOrder(){
+  if (!auth.user?.id) { alert('Inicia sesión para pagar'); return }
+  if (visibleItems.value.length === 0) { alert('Agrega productos al carrito'); return }
+
+  const orderItems = visibleItems.value.map(it => {
+    const productId = pid(it)
+    const qty = Number(it.cantidad) || 0
+    const price = priceOf(productId) || 0
+    return { producto_id: productId, cantidad: qty, precio_unitario: price }
+  }).filter(it => it.producto_id && it.cantidad > 0)
+
+  const totalValue = Number(total.value.toFixed(2))
+  if (!totalValue || orderItems.length === 0) { alert('Total inválido'); return }
+
+  processing.value = true
+  try {
+    const order = await createOrder({ usuario_id: auth.user.id, total: totalValue, items: orderItems })
+    console.log('[orders][frontend] created order', order)
+    await cart.clear(auth.user.id)
+    const orderId = order?.orderId || order?.id || '(desconocido)'
+    alert(`Pedido creado correctamente.\nID de compra: ${orderId}\nUsuario: ${auth.user.id}`)
+  } catch (e) {
+    console.error('Error creando pedido', e)
+    alert(e?.response?.data?.error || 'No se pudo procesar el pago. Intenta de nuevo.')
+  } finally {
+    processing.value = false
+  }
+}
 
 function payWhatsapp(){
   const lines = items.value.map(it => {
@@ -106,8 +140,10 @@ async function clearAll(){
 .close { border:none; background:transparent; font-size:18px; cursor:pointer; }
 .foot { border-top:1px solid #e5e7eb; padding:12px; display:grid; gap:8px; background:#fff; }
 .totals { display:flex; align-items:center; justify-content:space-between; }
-.foot-actions { display:flex; gap:8px; }
-.pay { background:#22c55e; color:#fff; border:none; padding:10px 12px; border-radius:10px; cursor:pointer; }
+.foot-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.pay { color:#fff; border:none; padding:10px 12px; border-radius:10px; cursor:pointer; }
+.pay.primary { background:#2563eb; }
+.pay.secondary { background:#22c55e; }
 .pay:disabled { opacity:.6; cursor:not-allowed; }
 .clear { background:transparent; border:1px solid #e5e7eb; color:#334155; padding:10px 12px; border-radius:10px; cursor:pointer; }
 .limit-note { color:#6b7280; font-size:12px; margin: 0; text-align:center; }

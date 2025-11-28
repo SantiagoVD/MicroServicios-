@@ -1,0 +1,30 @@
+services:
+  users:
+    image: node:18-alpine
+    working_dir: /app
+    volumes: [ "./:/app" ]
+    command: ["npm", "start"]
+    env_file: [ ".env" ]
+    ports: [ "13001:3001" ]  # expone en host 13001 para evitar choques
+    depends_on: [ users_db ]
+    restart: unless-stopped
+
+  users_db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-root}"
+      MYSQL_DATABASE: "${DB_NAME:-users_db}"
+    ports: [ "13306:3306" ]  # puerto alto para no chocar con MySQL local
+    command: ["--default-authentication-plugin=mysql_native_password"]
+    volumes: [ "users_db_data:/var/lib/mysql" ]
+    restart: unless-stopped
+
+  mongo_logs:
+    image: mongo:6
+    ports: [ "27027:27017" ]  # evita chocar con mongod local
+    volumes: [ "users_mongo_data:/data/db" ]
+    restart: unless-stopped
+
+volumes:
+  users_db_data:
+  users_mongo_data:

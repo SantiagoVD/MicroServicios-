@@ -4,12 +4,20 @@ const OrderController = {
   async create(req, res) {
     try {
       const { usuario_id, total, items } = req.body;
+      console.log('[orders] create request', { usuario_id, total, itemsCount: Array.isArray(items) ? items.length : 0 });
       if (!usuario_id || !total || !items || !Array.isArray(items)) {
         return res.status(400).json({ error: 'usuario_id, total e items son requeridos' });
       }
 
       const order = await orderService.createOrder(usuario_id, total, items);
-      res.status(201).json(order);
+      console.log('[orders] created order', order);
+      res.status(201).json({
+        orderId: order.id,
+        usuario_id,
+        total,
+        order,
+        items
+      });
     } catch (error) {
       console.error('Error en create:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
@@ -19,6 +27,7 @@ const OrderController = {
   async listByUser(req, res) {
     try {
       const { usuario_id } = req.params;
+      console.log('[orders] listByUser', { usuario_id });
       const orders = await orderService.getOrdersByUser(usuario_id);
       res.json(orders);
     } catch (error) {
@@ -31,6 +40,7 @@ const OrderController = {
     try {
       const { order_id } = req.params;
       const { estado } = req.body;
+      console.log('[orders] updateStatus', { order_id, estado });
 
       const updated = await orderService.updateOrderStatus(order_id, estado);
       if (!updated) {

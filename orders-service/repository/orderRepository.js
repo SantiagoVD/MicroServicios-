@@ -2,6 +2,7 @@ const pool = require('../services/db');
 
 class OrderRepository {
   async createOrder(usuario_id, total) {
+    console.log('[orders][repo] insert order', { usuario_id, total });
     const [result] = await pool.query(
       'INSERT INTO pedidos (usuario_id, total) VALUES (?, ?)',
       [usuario_id, total]
@@ -10,6 +11,7 @@ class OrderRepository {
   }
 
   async addItem(order_id, producto_id, cantidad, precio_unitario) {
+    console.log('[orders][repo] insert item', { order_id, producto_id, cantidad, precio_unitario });
     const [result] = await pool.query(
       'INSERT INTO pedido_items (pedido_id, producto_id, cantidad, precio_unitario) VALUES (?, ?, ?, ?)',
       [order_id, producto_id, cantidad, precio_unitario]

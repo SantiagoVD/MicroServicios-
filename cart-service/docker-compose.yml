@@ -1,0 +1,30 @@
+services:
+  cart:
+    image: node:18-alpine
+    working_dir: /app
+    volumes: [ "./:/app" ]
+    command: ["npm", "start"]
+    env_file: [ ".env" ]
+    ports: [ "13003:3003" ]
+    depends_on: [ cart_db ]
+    restart: unless-stopped
+
+  cart_db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-root}"
+      MYSQL_DATABASE: "${DB_NAME:-cart_db}"
+    ports: [ "13308:3306" ]
+    command: ["--default-authentication-plugin=mysql_native_password"]
+    volumes: [ "cart_db_data:/var/lib/mysql" ]
+    restart: unless-stopped
+
+  mongo_logs:
+    image: mongo:6
+    ports: [ "27029:27017" ]
+    volumes: [ "cart_mongo_data:/data/db" ]
+    restart: unless-stopped
+
+volumes:
+  cart_db_data:
+  cart_mongo_data:

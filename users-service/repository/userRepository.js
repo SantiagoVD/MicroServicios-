@@ -1,19 +1,17 @@
 const pool = require('../services/db');
 
 class UserRepository {
-  async create(nombre, correo, contrasena, rol = 'usuario') {
+  async create(nombre, correo, passwordHash, rol = 'usuario') {
+    console.log('[users][repo] insert user', { correo, rol });
     const [result] = await pool.query(
       'INSERT INTO usuarios (nombre, correo, contrasena_hash, rol) VALUES (?, ?, ?, ?)',
-      [nombre, correo, contrasena, rol]
+      [nombre, correo, passwordHash, rol]
     );
     return { id: result.insertId, nombre, correo, rol };
   }
 
-  async loginUsuario(correo, contrasena) {
-    const [rows] = await pool.query(
-      'SELECT * FROM usuarios WHERE correo = ? AND contrasena_hash = ?',
-      [correo, contrasena]
-    );
+  async findByCorreo(correo) {
+    const [rows] = await pool.query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
     return rows.length > 0 ? rows[0] : null;
   }
 

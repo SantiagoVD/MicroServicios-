@@ -1,6 +1,7 @@
 import { http } from './http'
 
-const BASE = 'http://localhost:3003/api/cart'
+// Cart service endpoint (env override, fallback a IP pública docker-mapeada)
+const BASE = import.meta?.env?.VITE_CART_API || 'http://3.150.168.237:13003/api/cart'
 
 export const getCart = (userId) => http.get(`${BASE}/${userId}`)
 export const createCart = (usuario_id) => http.post(`${BASE}/create`, { usuario_id })
